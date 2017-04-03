@@ -27,12 +27,17 @@ func resourceServer() *schema.Resource {
             },
             "taskDefinition": &schema.Schema{
                 Type:     schema.TypeString,
-                Optional: true,
+                Required: true,
             },
             "min": &schema.Schema{
                 Type:     schema.TypeString,
                 Optional: true,
                 Default: "50",
+            },
+            "max": &schema.Schema{
+                Type:     schema.TypeString,
+                Optional: true,
+                Default: "200",
             },
 
         },
@@ -50,19 +55,22 @@ func resourceServerCreate(d *schema.ResourceData, m interface{}) error {
    //Get variables
     service := d.Get("service").(string)
     cluster := d.Get("cluster").(string)
+    taskDefinition := d.Get("taskDefinition").(string)
     min := d.Get("min").(string)
-    i64, err:= strconv.ParseInt(min, 10, 64)
+    max := d.Get("max").(string)
+    min64, err:= strconv.ParseInt(min, 10, 64)
+    max64, err:= strconv.ParseInt(max, 10, 64)
 
 
     params := &ecs.UpdateServiceInput{
         Service: aws.String(service), // Required
         Cluster: aws.String(cluster),
         DeploymentConfiguration: &ecs.DeploymentConfiguration{
-            MaximumPercent:        aws.Int64(200),
-            MinimumHealthyPercent: aws.Int64(i64),
+            MaximumPercent:        aws.Int64(max64),
+            MinimumHealthyPercent: aws.Int64(min64),
         },
         //DesiredCount:   aws.Int64(1),
-        //TaskDefinition: aws.String("String"),
+        TaskDefinition: aws.String(taskDefinition),
     }
     resp, err := svc.UpdateService(params)
 
